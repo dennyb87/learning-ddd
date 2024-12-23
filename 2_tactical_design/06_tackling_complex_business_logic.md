@@ -103,6 +103,7 @@ An entity is an object identified by a **unique identifier**. Two person could h
 class Person:
     person_id: PersonId
     name: Name
+    ...
 ```
 
 # Aggregates  
