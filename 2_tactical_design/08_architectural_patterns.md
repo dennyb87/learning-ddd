@@ -70,7 +70,7 @@ flowchart TD
         action-y
         action-z
     end
-    subgraph pl["presentation layer"]
+    subgraph pl["Presentation layer"]
         Web-UI
         CLI
         REST-API
@@ -79,3 +79,24 @@ flowchart TD
 ```
 
 # Port & Adapters  
+
+![hexagonal_architecture](https://github.com/user-attachments/assets/d88cd221-6928-481a-83a9-3dd37d6bd38f)  
+
+Also known as **hexagonal architecture** or **onion architecture**, this pattern places the business logic at the core. The outermost layer is the infrastructure layer, which contain integration with external components such user interface, databases etc.. and it implements **adapters** which will connect to the **ports** exposes by the bussiness logic layer, the innermost layer.  
+
+```mermaid
+flowchart TD
+    subgraph bll["Business logic layer"]
+        entities
+        rules
+        processes
+    end
+    subgraph il["Infrastructure layer"]
+        database
+        UI-framework
+        message-bus
+    end
+    il-->bll-->il
+```
+
+An application layer could be placed in between acting as a facade for the business logic just like the service layer in the layered architecture.  
