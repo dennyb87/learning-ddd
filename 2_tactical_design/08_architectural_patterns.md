@@ -100,3 +100,51 @@ flowchart TD
 ```
 
 An application layer could be placed in between acting as a facade for the business logic just like the service layer in the layered architecture.  
+
+# Command-Query Responsibility Segregation  
+
+The main purpose of pattern is to enabled data representation in multiple persistent models. It does it by separating the responsibilities of **system commands**, where the business logic happens, to the **queries** or **read models**. It's useful for applications that need to work with same data in multiple models, potentially stored in different databases.  
+
+|                |                                |
+| -------------- | ------------------------------ |
+| 10.12.24 14:53 | Order payment for #1234        |
+| 10.12.24 14:57 | New order for #1234            |
+| 11.12.24 16:05 | Subscription for #1234         |
+| 11.12.24 16:15 | Subscription payment for #1234 |
+
+As an example let's assume our system has an *order*, *payment* and *subscription* service, and we want to produce a **customer events feed**.  
+
+## Synchronous projections  
+
+In the synchronous implementation there's a projection engine which:
+1. queries the databases for added/updated records after the last checkpoint
+2. creates a new projection of those records and update the read models
+3. store the checkpoint of the last processed records to be used in the next iteration
+
+```mermaid
+flowchart LR
+    cm[("Command models")]--"commit changes"-->pe["Projection engine"]
+    pe--"get last checkpoint records"--->cm
+    pe--"project"--->rm[("Read models")]
+```
+
+A checkpoint could be an autoincremental integer at SQL level upon INSERT or UPDATE.  
+
+## Asynchronous projections  
+
+In the asynchronous version, the command model would publish events for the projection engine which in turns generate new projections for the read model.  
+
+```mermaid
+flowchart LR
+    subgraph backend
+        o[(order)]-->mq@{ shape: das, label: "message queue" }
+        p[(payment)]-->mq
+        s[(subscription)]-->mq
+        mq-->
+        pe["Projection Engine"]--"project"-->rm[(customer event feed)]
+    end
+    web-client--"GET /feed"-->rm
+```
+
+Worth noting that this pattern could work nicely with event-sourced domain models, where is impossible to query records based on aggregates' states, while CQRS makes this possible by persisting projections into a queryable database.  
+
