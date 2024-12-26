@@ -60,3 +60,41 @@ flowchart LR
 
 # Integrating aggregates  
 
+One way for aggregates to communicate with the rest of the system is via domain events. A common mistake is to publishing the event from the aggregate it self.  
+
+```python
+class Campaign:
+    ...
+    def deactivate(self):
+        self.is_active = False
+        event = CampaignDeactivated(self.uid)
+        self.events.append(event)
+        self.message_bus.publish(event)
+```
+
+The event will be dispatched before the aggregate's new state is committed. A subscriber would receive the notification that the campaign is deactivated contradicting the campaign's state.  
+
+## Outbox  
+
+This pattern ansure reliable publishing of events as follows:  
+
+* aggregate's state and events are committed in the same transaction
+* a message relay fetches events from the database
+* the message relay publishes the events to a message bus
+* the relay marks the events as published or deletes them
+
+```mermaid
+flowchart LR
+    application-->transaction
+    subgraph transaction
+        as@{ shape: doc, label: "aggregate state"}
+        ot@{ shape: doc, label: "outbox table"}
+    end
+
+    transaction-->db[(database)]
+    
+    mr[message relay]--"query unpublished events"-->db
+    mr--"publish"-->mb@{ shape: das, label: "message bus" }
+```
+
+The message relay can fetch unpublished events in a **pull** manner (*polling publisher*), so quering unpublished events directly, or in a **push** fashion (*transaction log tailing*) where the relay it's called directly by a database's insert or update hook.  
