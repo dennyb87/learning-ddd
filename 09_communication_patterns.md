@@ -98,3 +98,57 @@ flowchart LR
 ```
 
 The message relay can fetch unpublished events in a **pull** manner (*polling publisher*), so quering unpublished events directly, or in a **push** fashion (*transaction log tailing*) where the relay it's called directly by a database's insert or update hook.  
+
+# Saga  
+
+It's business process that spans multiple aggregates. It listens to events emmitted by components and issues relevant commands accordingly to other components. It's responsible to issue compensating actions if any of the steps fails. Let's examine a scenario where when a new campaign is activated the ad material gets sent to the publisher, which can either accept and publish or reject the material.  
+
+```mermaid
+flowchart LR
+    ca[campaign aggregate]--"CampaignActivated"-->saga[campaign publishing saga]
+    saga--"track confirmation/rejection"-->ca
+
+    saga--"SubmitAd"-->ad-publishing
+    ad-publishing--"PublishingConfirmed/Rejected"-->saga
+```
+
+```python
+class CampaignPublishingSaga:
+    ...
+    @classmethod
+    def campaign_activated(cls, event: "CampaignActivated"):
+        campaign = event.campaign
+        ad_material = campaign.generate_ad_material()
+        PublishingService.submit_ad(campaign.uid, ad_material)
+
+    @classmethod
+    def publishing_confirmed(cls, event: "PublishingConfirmed"):
+        campaign = event.campaign
+        campaign.track_confirmation(event)
+        CampaignRepo.persist(campaing)
+    
+    @classmethod
+    def publishing_rejected(cls, event: "PublishingRejected"):
+        campaign = event.campaign
+        campaign.track_rejection(event)
+        CampaignRepo.persist(campaign)
+```
+
+This is a stateless saga, but in cases where state management is required we can implement saga as an event-sourced aggregate.  
+
+# Process manager  
+
+While our saga implementation was simply matching events to commands. The process manager is a more complex process that maintains the state of a sequence and determines the next step.  
+
+```mermaid
+flowchart LR
+    node((" "))
+    application--"start new booking process"-->pm["trip booking<br>(process manager)"]<--->node
+    pm<-->db[(state)]
+    node-->fr[flight routing]
+    node-->fb[flight booking]
+    node-->hb[hotel booking]
+    node-->at[approval tracking]
+```
+
+Booking a business trip starts with choosing a flight route, where the employee needs to approve it. When the flight is booked, it's time to book the hotel, and if none is available for the required dates the flight tickets have to be cancelled and so on...  
