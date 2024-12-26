@@ -138,7 +138,7 @@ This is a stateless saga, but in cases where state management is required we can
 
 # Process manager  
 
-While our saga implementation was simply matching events to commands. The process manager is a more complex process that maintains the state of a sequence and determines the next step.  
+While our saga implementation was simply matching events to commands, the process manager is a more complex process that maintains the state of a sequence and determines the next step.  
 
 ```mermaid
 flowchart LR
