@@ -61,3 +61,26 @@ If multiple teams are working on the same codebase, we can think of decoupling t
 * **open-host service** - use it to protect consumers from implementation changes
 * **separate ways** - if the functionality that causes friction is not business critical each team can go and implement their own solutions
 
+## Tactical modernization  
+
+Watch out for the most painful mismatches between business value and implementation e.g. subdomains implementing patterns that does not match the complexity of the model. These will change frequently and painful to maintain. Once equipped with domain knowledge and its models we can decide on the modernization strategy: gradually replacing whole components aka *strangler pattern*, or gradually refactoring existing solutions.  
+
+### Strangler pattern  
+
+```mermaid
+flowchart TD
+    client-->facade-->modern
+    facade-->legacy
+    legacy-->db[(database)]
+    modern-->db
+```
+
+Named after [strangler fig](https://en.wikipedia.org/wiki/Strangler_fig) due to resemblance in dynamics: as the strangler grows on the host tree, it overshadows it leading to its death. Usually it goes in tandem with the *facade pattern* where a thin abstraction layer act as the public interfac to route request appropriately. In this scenario is ok to use the same storage as the legacy context will soon retire anyway.  
+
+### Refactoring tactical design decisions  
+
+Think big start small, don't refactor transaction script into event-sourced domain model. Take the intermediary step of simple aggregates. Apply small incremental refactoring e.g. look out for potential value objects and move related logic inside them.  
+
+# Cultivate ubiquitous language  
+
+Listen carefully to stakeholders' language and avoid technical jargon but rather steer terminology towards its business meaning. Watch out for inconsistent terms, ask for clarifications. If different models are intertwined in the same solution, look for contexts and make them explicit. Use ubiquitous language in the codebase and don't forget to let the business domain drive design decisions!
