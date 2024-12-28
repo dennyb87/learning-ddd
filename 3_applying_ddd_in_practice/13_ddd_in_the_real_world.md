@@ -75,7 +75,7 @@ flowchart TD
     modern-->db
 ```
 
-Named after [strangler fig](https://en.wikipedia.org/wiki/Strangler_fig) due to resemblance in dynamics: as the strangler grows on the host tree, it overshadows it leading to its death. Usually it goes in tandem with the *facade pattern* where a thin abstraction layer act as the public interfac to route request appropriately. In this scenario is ok to use the same storage as the legacy context will soon retire anyway.  
+Named after [strangler fig](https://en.wikipedia.org/wiki/Strangler_fig) due to resemblance in dynamics: as the strangler grows on the host tree, it overshadows it leading to its death. Usually it goes in tandem with the *facade pattern* where a thin abstraction layer act as the public interface to route request appropriately. In this scenario is ok to use the same storage as the legacy context will soon retire anyway.  
 
 ### Refactoring tactical design decisions  
 
